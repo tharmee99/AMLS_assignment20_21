@@ -127,3 +127,12 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Dataset
+AMLS_20-21_SN17011729/Datasets/
+
+# Temporary Pre-processing files
+AMLS_20-21_SN17011729/A1/temp/
+AMLS_20-21_SN17011729/A2/temp/
+AMLS_20-21_SN17011729/B1/temp/
+AMLS_20-21_SN17011729/B2/temp/
