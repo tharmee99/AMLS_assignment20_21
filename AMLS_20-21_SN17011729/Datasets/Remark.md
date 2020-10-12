@@ -45,7 +45,7 @@ Datasets
 
 ## ```celeba``` dataset
 
-This dataset is to be used for tasks A1 and A2. A seperate folder is provided for training and testing images. The images are of celebrity faces. The ```labels.csv`` file contains the labels required for the training and testing. The first column is the index. The second column is the corresponding file name. The third column is the gender ({-1, +1}). The last column is whether the person is smiling or not smiling ({-1, +1})
+This dataset is to be used for tasks A1 and A2. A seperate folder is provided for training and testing images. The images are of celebrity faces. The ```labels.csv``` file contains the labels required for the training and testing. The first column is the index. The second column is the corresponding file name. The third column is the gender ({-1, +1}). The last column is whether the person is smiling or not smiling ({-1, +1})
 
 ## ```cartoon_set``` dataset
 
