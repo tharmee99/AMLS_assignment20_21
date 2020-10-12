@@ -138,3 +138,5 @@ AMLS_20-21_SN17011729/Datasets/
 *.aux
 *.log
 *.synctex.gz
+*.bbl
+*.blg
