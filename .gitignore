@@ -133,3 +133,8 @@ AMLS_20-21_SN17011729/Datasets/
 
 # Temporary Pre-processing files
 **/temp/
+
+# Latex temporary files
+*.aux
+*.log
+*.synctex.gz
