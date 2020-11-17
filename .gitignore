@@ -140,3 +140,6 @@ AMLS_20-21_SN17011729/Datasets/
 *.synctex.gz
 *.bbl
 *.blg
+
+# Pycharm Environment
+.idea/
