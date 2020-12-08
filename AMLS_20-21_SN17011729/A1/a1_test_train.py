@@ -12,6 +12,7 @@ class A1(defs.Task):
 
     def preprocess_image(self, image_dir):
         arr = cv2.imread(image_dir, 0)
+        print(arr.shape)
         return arr
 
     def train(self, x_train, y_train):
@@ -26,9 +27,9 @@ if __name__ == '__main__':
     root_dir = os.path.join(os.getcwd(), os.pardir)
     A1 = A1(os.path.join(root_dir, "Datasets", "celeba"), os.path.join(os.getcwd(), "temp"))
 
-    # X, y = A1.build_design_matrix()
-
-    a = np.zeros((1, 1))
-    # A1.save_intermediate(a, "random_arr", overwrite=False)
+    # X_raw, y = A1.build_design_matrix()
+    #
+    # A1.save_intermediate(X_raw, "X_raw")
+    # A1.save_intermediate(y, "y")
     A1.read_intermediate('random_arr.npy', get_latest=False)
     pass

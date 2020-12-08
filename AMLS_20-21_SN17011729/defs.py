@@ -14,6 +14,12 @@ class Task:
         self.test_accuracy = -1.0
         self.train_accuracy = -1.0
 
+        self.model = None
+        self.X_train = None
+        self.X_test = None
+        self.y_train = None
+        self.y_test = None
+
     def preprocess_image(self, image_dir):
         raise NotImplemented("Preprocessing method must be implemented!")
 
@@ -39,7 +45,7 @@ class Task:
         file_idx = 1
         image_path = os.path.join(self.dataset_dir, "img", str(file_idx) + self.accepted_formats[file_ext])
         while os.path.isfile(image_path):
-            X = np.append(X, self.preprocess_image(image_path))
+            X = np.append(X, self.preprocess_image(image_path), axis=0)
             file_idx += 1
             image_path = os.path.join(self.dataset_dir, "img", str(file_idx) + self.accepted_formats[file_ext])
             print(file_idx)
@@ -88,10 +94,10 @@ class Task:
         else:
             raise TypeError(file[1] + " files are not supported")
 
-    def train(self, x_train, y_train):
+    def train(self):
         raise NotImplemented("Training method must be implemented!")
 
-    def test(self, x_train, y_train):
+    def test(self, X_test=None, y_test=None):
         raise NotImplemented("Testing method must be implemented")
 
     def print_results(self):
