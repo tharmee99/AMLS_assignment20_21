@@ -1,35 +1,45 @@
 import defs
 import cv2
 import os
-import numpy as np
+import tensorflow as tf
+
+from A1.models import CNN_model
+
 
 class A1(defs.Task):
-    def __init__(self, dataset_dir, temp_dir):
+    def __init__(self, dataset_dir, temp_dir, rescaled_image_dim=(54, 44), colour=True):
         super().__init__(name='Task A1 - Gender Classification',
                          dataset_dir=dataset_dir,
                          temp_dir=temp_dir,
                          label_feature='gender')
 
-    def preprocess_image(self, image_dir):
-        arr = cv2.imread(image_dir, 0)
-        print(arr.shape)
-        return arr
+        self.rescaled_image_dim = rescaled_image_dim
+        self.colour = colour
+        self.model = CNN_model(self.rescaled_image_dim, 2)
+        self.get_data(one_hot_encoded=True)
 
-    def train(self, x_train, y_train):
-        pass
+    def preprocess_image(self, image_dir, show_img=False):
+        cv_read_flag = 1 if self.colour else 0
+        # Read image
+        image = cv2.imread(image_dir, cv_read_flag)
+        # Resize image
+        resized = cv2.resize(image, self.rescaled_image_dim, interpolation=cv2.INTER_AREA)
 
-    def test(self, x_train, y_train):
-        pass
+        if show_img:
+            temp = cv2.resize(resized, (image.shape[1], image.shape[0]), fx=0, fy=0, interpolation=cv2.INTER_NEAREST)
+            defs.view_image(temp)
+
+        norm_img = resized / 255.0
+
+        return norm_img
+
 
 
 if __name__ == '__main__':
+    # root_dir = os.path.join(os.getcwd(), os.pardir)
+    # A1 = A1(os.path.join(root_dir, "Datasets", "celeba"), os.path.join(os.getcwd(), "temp"))
+    # A1.train()
 
-    root_dir = os.path.join(os.getcwd(), os.pardir)
-    A1 = A1(os.path.join(root_dir, "Datasets", "celeba"), os.path.join(os.getcwd(), "temp"))
+    print(type(defs.factors(64)))
 
-    # X_raw, y = A1.build_design_matrix()
-    #
-    # A1.save_intermediate(X_raw, "X_raw")
-    # A1.save_intermediate(y, "y")
-    A1.read_intermediate('random_arr.npy', get_latest=False)
     pass

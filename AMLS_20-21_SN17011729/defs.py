@@ -1,6 +1,60 @@
+import sys
+
+import cv2
 import numpy as np
 import os
 import pandas as pd
+import multiprocessing as mp
+import math
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import OneHotEncoder
+from tqdm import tqdm
+from functools import reduce
+
+def rect_to_bb(rect):
+    # take a bounding predicted by dlib and convert it
+    # to the format (x, y, w, h) as we would normally do
+    # with OpenCV
+    x = rect.left()
+    y = rect.top()
+    w = rect.right() - x
+    h = rect.bottom() - y
+    # return a tuple of (x, y, w, h)
+    return x, y, w, h
+
+
+def shape_to_np(shape, dtype="int"):
+    # initialize the list of (x, y)-coordinates
+    coords = np.zeros((68, 2), dtype=dtype)
+    # loop over the 68 facial landmarks and convert them
+    # to a 2-tuple of (x, y)-coordinates
+    for i in range(0, 68):
+        coords[i] = (shape.part(i).x, shape.part(i).y)
+    # return the list of (x, y)-coordinates
+    return coords
+
+
+def view_image(img, window_name="image"):
+    cv2.imshow(window_name, img)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+
+def factors(n):
+    return set(reduce(list.__add__, ([i, n//i] for i in range(1, int(n**0.5) + 1) if n % i == 0)))
+
+
+class Model:
+    def __init__(self):
+        self.requires_validation_set = False
+        pass
+
+    def train(self, X_train, y_train):
+        raise NotImplemented("Model Train function needs to be implemented")
+
+    def test(self, X_test, y_test):
+        raise NotImplemented("Model Test function needs to be implemented")
 
 
 class Task:
@@ -20,45 +74,56 @@ class Task:
         self.y_train = None
         self.y_test = None
 
-    def preprocess_image(self, image_dir):
+    def preprocess_image(self, image_dir, show_img=False):
         raise NotImplemented("Preprocessing method must be implemented!")
 
-    def build_design_matrix(self):
+    def get_data(self, X_arr_name='X.npy', y_arr_name='y.npy', one_hot_encoded=False):
+        try:
+            X = self.read_intermediate(X_arr_name)
+            y = self.read_intermediate(y_arr_name)
+        except FileNotFoundError:
+            X, y = self.build_design_matrix()
+            self.save_intermediate(X, 'X')
+            self.save_intermediate(y, 'y')
 
-        # Identify which format the images are stored in
-        file_ext = -1
-        for idx, ext in enumerate(self.accepted_formats):
-            if os.path.isfile(os.path.join(self.dataset_dir, "img", "0" + ext)):
-                file_ext = idx
-                break
+        if one_hot_encoded:
+            enc = OneHotEncoder(handle_unknown='ignore', sparse=False)
+            y = enc.fit_transform(y.reshape(-1, 1))
 
-        # If image cannot be found or is of incorrect format, throw exception
-        if file_ext == -1:
-            raise FileNotFoundError("Dataset directory was not found. Ensure that the directory is correct and images "
-                                    "are of supported format")
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, test_size=0.2)
+        pass
 
-        # Start building the design matrix by reading the first image
-        image_path = os.path.join(self.dataset_dir, "img", "0" + self.accepted_formats[file_ext])
-        X = self.preprocess_image(image_path)
+    def build_design_matrix(self, dataset_dir=None, verbose=0):
+        if dataset_dir is not None:
+            image_paths = [os.path.join(dataset_dir, "img", img) for img in
+                           os.listdir(os.path.join(dataset_dir, "img"))]
+            labels_csv = pd.read_csv(os.path.join(dataset_dir, "labels.csv"), sep='\t')
+        else:
+            image_paths = [os.path.join(self.dataset_dir, "img", img) for img in
+                           os.listdir(os.path.join(self.dataset_dir, "img"))]
+            labels_csv = pd.read_csv(os.path.join(self.dataset_dir, "labels.csv"), sep='\t')
 
-        # Iterate through each image and preprocess it before appending it to the design matrix
-        file_idx = 1
-        image_path = os.path.join(self.dataset_dir, "img", str(file_idx) + self.accepted_formats[file_ext])
-        while os.path.isfile(image_path):
-            X = np.append(X, self.preprocess_image(image_path), axis=0)
-            file_idx += 1
-            image_path = os.path.join(self.dataset_dir, "img", str(file_idx) + self.accepted_formats[file_ext])
-            print(file_idx)
-
-        # Read and build the label vector
-        csv = pd.read_csv(os.path.join(self.dataset_dir, "labels.csv"), sep='\t')
-
-        if self.label_feature in csv.columns:
-            y = csv[self.label_feature].to_numpy()
+        if self.label_feature in labels_csv.columns:
+            if 'img_name' in labels_csv.columns:
+                labels = {r['img_name']: r[self.label_feature] for i, r in labels_csv.iterrows()}
+            elif 'file_name' in labels_csv.columns:
+                labels = {r['file_name']: r[self.label_feature] for i, r in labels_csv.iterrows()}
+            else:
+                raise Exception("No column for file name in labels.csv")
         else:
             raise Exception("label feature cannot be found in csv file")
 
-        return X, y
+        X = []
+        y = []
+
+        for img in tqdm(image_paths, desc="Pre-processing dataset", file=sys.stdout):
+            X.append(self.preprocess_image(img, show_img=(verbose > 0)))
+            y.append(labels[os.path.basename(img)])
+
+        X_np = np.array(X)
+        y_np = np.array(y)
+
+        return X_np, y_np
 
     def save_intermediate(self, obj, file_name, overwrite=True):
 
@@ -90,15 +155,40 @@ class Task:
                 while os.path.isfile(os.path.join(self.temp_dir, file_name_tmp + ".npy")):
                     idx += 1
                     file_name_tmp = file[0] + '_' + str(idx)
-                return np.load(os.path.join(self.temp_dir, file[0] + '_' + str(idx-1) + ".npy"))
+                return np.load(os.path.join(self.temp_dir, file[0] + '_' + str(idx - 1) + ".npy"))
         else:
             raise TypeError(file[1] + " files are not supported")
 
     def train(self):
-        raise NotImplemented("Training method must be implemented!")
+        if self.model is None:
+            raise Exception("Model has not been initialized")
+
+        if self.X_train is None or self.X_test is None or self.y_train is None or self.y_test is None:
+            raise Exception("Data has not been imported")
+
+        if self.model.requires_validation_set:
+            self.model.train(self.X_train, self.y_train, validation_data=(self.X_test, self.y_test))
+        else:
+            self.model.train(self.X_train, self.y_train)
+
+        _, self.train_accuracy = self.test(self.X_train, self.y_train)
+
+        # TODO : Save trained model using self.save_intermediate
+
+        pass
 
     def test(self, X_test=None, y_test=None):
-        raise NotImplemented("Testing method must be implemented")
+        if self.model is None:
+            raise Exception("Model has not been initialized")
+
+        if self.X_train is None or self.X_test is None or self.y_train is None or self.y_test is None:
+            raise Exception("Data has not been imported")
+
+        if X_test is not None:
+            return self.model.test(X_test, y_test)
+        else:
+            y_pred, self.test_accuracy = self.model.test(self.X_test, self.y_test)
+            return y_pred, self.test_accuracy
 
     def print_results(self):
         if self.train_accuracy < 0:
@@ -106,7 +196,7 @@ class Task:
         elif self.test_accuracy < 0:
             print("Model has not been tested on test dataset")
         else:
-            print("Train Accuracy: {}\nTest Accuracy: {}".format(self.train_accuracy, self.train_accuracy))
+            print("Train Accuracy:\t{}\nTest Accuracy:\t{}".format(self.train_accuracy, self.test_accuracy))
 
 
 if __name__ == '__main__':

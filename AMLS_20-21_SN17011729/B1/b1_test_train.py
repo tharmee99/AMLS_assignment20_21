@@ -2,9 +2,9 @@ import defs
 import cv2
 import os
 import numpy as np
-import tensorflow as tf
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import OneHotEncoder
+from B1 import models
+
 
 class B1(defs.Task):
     def __init__(self,
@@ -15,74 +15,25 @@ class B1(defs.Task):
                          dataset_dir=dataset_dir,
                          temp_dir=temp_dir,
                          label_feature='face_shape')
+
         self.rescaled_image_dim = rescaled_image_dim
+        self.model = models.SVM_model()
+        self.get_data()
 
-    def instantiate_model(self, num_of_labels=5, show_summary=False):
-
-        # Convolutional Neural Network in tensorflow
-        self.model = tf.keras.models.Sequential([
-            tf.keras.layers.Conv2D(8, (5, 5), activation='relu', input_shape=(*self.rescaled_image_dim, 1)),
-            tf.keras.layers.MaxPool2D(2, 2),
-            tf.keras.layers.Conv2D(8, (5, 5), activation='relu'),
-            tf.keras.layers.MaxPool2D(2, 2),
-            tf.keras.layers.Flatten(),
-            tf.keras.layers.Dense(100, activation='relu'),
-            tf.keras.layers.Dense(num_of_labels, activation='softmax')
-        ])
-
-        # Compile model with loss function and optimizer
-        self.model.compile(loss='categorical_crossentropy',
-                           metrics=['accuracy'],
-                           optimizer='adam')
-
-        # Show summary of layer parameters and shapes
-        if show_summary:
-            self.model.summary()
-
-        # Read/Build dataset
-        if os.path.isfile(os.path.join(self.temp_dir, 'X.npy')) and os.path.isfile(os.path.join(self.temp_dir, 'y.npy')):
-            X = self.read_intermediate('X.npy')
-            y = self.read_intermediate('y.npy')
-
-            # TODO : Check if imported dims agree with self.rescaled_image_dim
-
-        else:
-            X, y = self.build_design_matrix()
-            self.save_intermediate(X, 'X')
-            self.save_intermediate(y, 'y')
-
-        # Onehot encode labels
-        enc = OneHotEncoder(handle_unknown='ignore', sparse=False)
-        y = enc.fit_transform(y.reshape((-1, 1)))
-
-        # Test-train split of dataset
-        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, random_state=42)
-
-    def preprocess_image(self, image_dir, image_scale=0.1):
+    def preprocess_image(self, image_dir):
         img = cv2.imread(image_dir, 0)
 
         # Resize image
         resized = cv2.resize(img, self.rescaled_image_dim, interpolation=cv2.INTER_AREA)
 
-        # TODO : Equalize histogram of image
-
         # Reshape to append to design matrix
-        resized = np.reshape(resized, (1, *resized.shape, 1))
+        # TODO : Reshape size conditional on self.model
+        out_img = np.reshape(resized, (-1))
 
         # Scale values to (0,1)
-        scaled = resized/255.0
+        norm_img = out_img/255.0
 
-        return scaled
-
-    def train(self):
-        self.model.fit(self.X_train, self.y_train, epochs=25, validation_data=(self.X_test, self.y_test))
-
-        # TODO : Save trained model using self.save_intermediate
-
-        pass
-
-    def test(self, X_test=None, y_test=None):
-        pass
+        return norm_img
 
 
 if __name__ == '__main__':
