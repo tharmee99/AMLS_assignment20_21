@@ -1,11 +1,10 @@
+import math
 import sys
 
 import cv2
 import numpy as np
 import os
 import pandas as pd
-import multiprocessing as mp
-import math
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OneHotEncoder
@@ -44,6 +43,8 @@ def view_image(img, window_name="image"):
 def factors(n):
     return set(reduce(list.__add__, ([i, n//i] for i in range(1, int(n**0.5) + 1) if n % i == 0)))
 
+def euclidean_distance(a, b):
+    return math.sqrt((a[0]-b[0])**2 + (a[1]-b[1])**2)
 
 class Model:
     def __init__(self):
@@ -68,6 +69,8 @@ class Task:
         self.test_accuracy = -1.0
         self.train_accuracy = -1.0
 
+        self.oh_enc_categories = None
+
         self.model = None
         self.X_train = None
         self.X_test = None
@@ -77,18 +80,19 @@ class Task:
     def preprocess_image(self, image_dir, show_img=False):
         raise NotImplemented("Preprocessing method must be implemented!")
 
-    def get_data(self, X_arr_name='X.npy', y_arr_name='y.npy', one_hot_encoded=False):
+    def get_data(self, X_arr_name='X.npy', y_arr_name='y.npy', one_hot_encoded=False, verbose=0):
         try:
             X = self.read_intermediate(X_arr_name)
             y = self.read_intermediate(y_arr_name)
         except FileNotFoundError:
-            X, y = self.build_design_matrix()
+            X, y = self.build_design_matrix(verbose=verbose)
             self.save_intermediate(X, 'X')
             self.save_intermediate(y, 'y')
 
         if one_hot_encoded:
             enc = OneHotEncoder(handle_unknown='ignore', sparse=False)
             y = enc.fit_transform(y.reshape(-1, 1))
+            self.oh_enc_categories = enc.categories_
 
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, test_size=0.2)
         pass
@@ -117,8 +121,10 @@ class Task:
         y = []
 
         for img in tqdm(image_paths, desc="Pre-processing dataset", file=sys.stdout):
-            X.append(self.preprocess_image(img, show_img=(verbose > 0)))
-            y.append(labels[os.path.basename(img)])
+            to_append = self.preprocess_image(img, show_img=(verbose > 0))
+            if to_append is not None:
+                X.append(to_append)
+                y.append(labels[os.path.basename(img)])
 
         X_np = np.array(X)
         y_np = np.array(y)

@@ -11,6 +11,7 @@ class B1(defs.Task):
                  dataset_dir,
                  temp_dir,
                  rescaled_image_dim=(50, 50)):
+
         super().__init__(name='Task B1 - Face Shape Classification',
                          dataset_dir=dataset_dir,
                          temp_dir=temp_dir,
@@ -20,7 +21,7 @@ class B1(defs.Task):
         self.model = models.SVM_model()
         self.get_data()
 
-    def preprocess_image(self, image_dir):
+    def preprocess_image(self, image_dir, show_img=False):
         img = cv2.imread(image_dir, 0)
 
         # Resize image

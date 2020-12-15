@@ -36,10 +36,5 @@ class A1(defs.Task):
 
 
 if __name__ == '__main__':
-    # root_dir = os.path.join(os.getcwd(), os.pardir)
-    # A1 = A1(os.path.join(root_dir, "Datasets", "celeba"), os.path.join(os.getcwd(), "temp"))
-    # A1.train()
-
-    print(type(defs.factors(64)))
 
     pass

@@ -28,6 +28,7 @@ class SVM_model(defs.Model):
 
 class Logistic_model(defs.Model):
     def __init__(self):
+        super(Logistic_model, self).__init__()
         print("Instantiating Logistic Regression model...")
         self.model = LogisticRegression(verbose=1, max_iter=5e3)
         pass
