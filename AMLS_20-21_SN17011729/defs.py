@@ -1,4 +1,5 @@
 import math
+import pickle
 import sys
 
 import cv2
@@ -6,7 +7,7 @@ import numpy as np
 import os
 import pandas as pd
 
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, StratifiedKFold
 from sklearn.preprocessing import OneHotEncoder
 from tqdm import tqdm
 from functools import reduce
@@ -69,7 +70,7 @@ class Task:
         self.test_accuracy = -1.0
         self.train_accuracy = -1.0
 
-        self.oh_enc_categories = None
+        self.enc = None
 
         self.model = None
         self.X_train = None
@@ -90,11 +91,12 @@ class Task:
             self.save_intermediate(y, 'y')
 
         if one_hot_encoded:
-            enc = OneHotEncoder(handle_unknown='ignore', sparse=False)
-            y = enc.fit_transform(y.reshape(-1, 1))
-            self.oh_enc_categories = enc.categories_
+            self.enc = OneHotEncoder(handle_unknown='ignore', sparse=False)
+            y = self.enc.fit_transform(y.reshape(-1, 1))
 
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, test_size=0.2)
+
+        # TODO : read model (self.model.model) depending on selected model (self.model)
         pass
 
     def build_design_matrix(self, dataset_dir=None, verbose=0):
@@ -122,6 +124,7 @@ class Task:
 
         for img in tqdm(image_paths, desc="Pre-processing dataset", file=sys.stdout):
             to_append = self.preprocess_image(img, show_img=(verbose > 0))
+
             if to_append is not None:
                 X.append(to_append)
                 y.append(labels[os.path.basename(img)])
@@ -136,7 +139,7 @@ class Task:
         if not os.path.exists(self.temp_dir):
             os.makedirs(self.temp_dir)
 
-        if type(obj).__module__ == np.__name__:
+        elif type(obj).__module__ == np.__name__:
             if overwrite or (not os.path.isfile(os.path.join(self.temp_dir, file_name + ".npy"))):
                 np.save(os.path.join(self.temp_dir, file_name), obj)
             else:
@@ -147,7 +150,7 @@ class Task:
                     file_name_new = file_name + '_' + str(idx)
                 np.save(os.path.join(self.temp_dir, file_name_new), obj)
         else:
-            raise TypeError(type(obj) + " is not supported")
+            raise TypeError("{} is not supported".format(type(obj)))
 
     def read_intermediate(self, file_name, get_latest=False):
         file = file_name.split('.')
@@ -165,22 +168,48 @@ class Task:
         else:
             raise TypeError(file[1] + " files are not supported")
 
-    def train(self):
+    def compute_kfold_cv_score(self, folds=5):
+        skf = StratifiedKFold(n_splits=folds)
+
+        accuracy = []
+
+        if self.enc is not None:
+            y_temp = self.enc.inverse_transform(self.y_train)
+        else:
+            y_temp = self.y_train
+
+        for train_index, test_index in skf.split(self.X_train, y_temp):
+            X_train, X_test = self.X_train[train_index], self.X_train[test_index]
+            y_train, y_test = self.y_train[train_index], self.y_train[test_index]
+
+            self.train(X_train, y_train)
+            _, acc = self.test(X_test, y_test)
+            accuracy.append(acc)
+
+        return accuracy
+
+    def train(self, X_train=None, y_train=None):
         if self.model is None:
             raise Exception("Model has not been initialized")
 
-        if self.X_train is None or self.X_test is None or self.y_train is None or self.y_test is None:
-            raise Exception("Data has not been imported")
+        if X_train is None or y_train is None:
 
-        if self.model.requires_validation_set:
-            self.model.train(self.X_train, self.y_train, validation_data=(self.X_test, self.y_test))
+            if self.X_train is None or self.X_test is None or self.y_train is None or self.y_test is None:
+                raise Exception("Data has not been imported")
+
+            if self.model.requires_validation_set:
+                self.model.train(self.X_train, self.y_train, validation_data=(self.X_test, self.y_test))
+            else:
+                self.model.train(self.X_train, self.y_train)
+
+            _, self.train_accuracy = self.test(self.X_train, self.y_train)
+
+            # TODO : Save trained model
         else:
-            self.model.train(self.X_train, self.y_train)
-
-        _, self.train_accuracy = self.test(self.X_train, self.y_train)
-
-        # TODO : Save trained model using self.save_intermediate
-
+            if self.model.requires_validation_set:
+                self.model.train(self.X_train, self.y_train, validation_data=(self.X_test, self.y_test))
+            else:
+                self.model.train(self.X_train, self.y_train)
         pass
 
     def test(self, X_test=None, y_test=None):

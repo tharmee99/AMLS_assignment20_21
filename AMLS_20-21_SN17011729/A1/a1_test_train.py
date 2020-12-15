@@ -34,7 +34,5 @@ class A1(defs.Task):
         return norm_img
 
 
-
 if __name__ == '__main__':
-
     pass

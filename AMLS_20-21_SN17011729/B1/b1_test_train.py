@@ -19,6 +19,7 @@ class B1(defs.Task):
 
         self.rescaled_image_dim = rescaled_image_dim
         self.model = models.SVM_model()
+        self.flatten = True
         self.get_data()
 
     def preprocess_image(self, image_dir, show_img=False):
@@ -29,10 +30,11 @@ class B1(defs.Task):
 
         # Reshape to append to design matrix
         # TODO : Reshape size conditional on self.model
-        out_img = np.reshape(resized, (-1))
+        if self.flatten:
+            resized = np.reshape(resized, (-1))
 
         # Scale values to (0,1)
-        norm_img = out_img/255.0
+        norm_img = resized/255.0
 
         return norm_img
 

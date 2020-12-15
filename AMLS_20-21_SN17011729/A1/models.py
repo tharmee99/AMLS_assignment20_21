@@ -11,7 +11,7 @@ class CNN_model(tf.keras.Model, defs.Model):
                  input_shape,
                  num_of_classes,
                  cnn_filters=8,
-                 cnn_kernel_size=(5,5),
+                 cnn_kernel_size=(5, 5),
                  layer_activation='relu',
                  dense_layer_size=100):
 
@@ -45,7 +45,7 @@ class CNN_model(tf.keras.Model, defs.Model):
                                      epochs=10,
                                      validation_data=validation_data,
                                      shuffle=True,
-                                     verbose=0)
+                                     verbose=1)
         pass
 
     def test(self, X_test, y_test):

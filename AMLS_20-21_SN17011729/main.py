@@ -8,12 +8,15 @@ from B2.b2_test_train import B2
 
 CARTOON_DATASET_DIR = os.path.join("Datasets", "cartoon_set")
 CELEB_DATASET_DIR = os.path.join("Datasets", "celeba")
+
 # Task A1
 ########################################################################################################################
 
 print("\n\n-------------Task A1 - Gender Classification-------------\n\n")
 
 taskA1 = A1(CELEB_DATASET_DIR, os.path.join("A1", "temp"))
+acc = taskA1.compute_kfold_cv_score()
+print(acc)
 taskA1.train()
 taskA1.test()
 taskA1.print_results()
@@ -50,6 +53,10 @@ taskB1.print_results()
 
 print("\n\n-------------Task B2 - Eye Colour Classification-------------\n\n")
 
+taskB2 = B2(CARTOON_DATASET_DIR, os.path.join("B2", "temp"))
+taskB2.train()
+taskB2.test()
+taskB2.print_results()
 
 ########################################################################################################################
 
