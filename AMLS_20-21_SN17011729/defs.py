@@ -50,6 +50,7 @@ def euclidean_distance(a, b):
 class Model:
     def __init__(self):
         self.requires_validation_set = False
+        self.requires_flat_input = False
         pass
 
     def train(self, X_train, y_train):

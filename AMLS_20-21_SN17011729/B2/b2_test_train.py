@@ -7,7 +7,7 @@ from B2 import models
 
 class B2(defs.Task):
     def __init__(self, dataset_dir, temp_dir, rescaled_image_dim=(40, 40)):
-        super().__init__(name='Task A1 - Eye Colour Classification',
+        super().__init__(name='Task B2 - Eye Colour Classification',
                          dataset_dir=dataset_dir,
                          temp_dir=temp_dir,
                          label_feature='eye_color')
@@ -34,11 +34,15 @@ class B2(defs.Task):
         # Read image
         image = cv2.imread(image_dir, 1)
 
+        x_mid = image.shape[0] // 2
+
+        image = image[:, :x_mid]
+
         # Resize image
         resized = cv2.resize(image, self.rescaled_image_dim, interpolation=cv2.INTER_AREA)
 
         if show_img:
-            temp = cv2.resize(resized, (500, 500), fx=0, fy=0, interpolation=cv2.INTER_NEAREST)
+            temp = cv2.resize(resized, (250, 500), fx=0, fy=0, interpolation=cv2.INTER_NEAREST)
             defs.view_image(temp)
 
         return resized.reshape(-1)

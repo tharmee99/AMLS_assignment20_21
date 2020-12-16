@@ -15,8 +15,8 @@ CELEB_DATASET_DIR = os.path.join("Datasets", "celeba")
 print("\n\n-------------Task A1 - Gender Classification-------------\n\n")
 
 taskA1 = A1(CELEB_DATASET_DIR, os.path.join("A1", "temp"))
-acc = taskA1.compute_kfold_cv_score()
-print(acc)
+# acc = taskA1.compute_kfold_cv_score()
+# print(acc)
 taskA1.train()
 taskA1.test()
 taskA1.print_results()
@@ -59,4 +59,17 @@ taskB2.test()
 taskB2.print_results()
 
 ########################################################################################################################
+# Summary
+########################################################################################################################
 
+print("\n\n\n")
+
+print("{}:".format(taskA1.name))
+taskA1.print_results()
+
+print("{}:".format(taskA2.name))
+taskA2.print_results()
+print("{}:".format(taskB1.name))
+taskB1.print_results()
+print("{}:".format(taskB2.name))
+taskB2.print_results()
