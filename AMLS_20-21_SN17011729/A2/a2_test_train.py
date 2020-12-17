@@ -45,8 +45,10 @@ class A2(defs.Task):
         if len(self.X_train.shape) == 1:
             self.X_train.reshape(-1, 1)
 
-        self.model = models.SVM_model()
+        self.initialize_model()
 
+    def initialize_model(self):
+        self.model = models.SVM_model()
 
     def __get_dlib_mouth_landmarks(self, img, show_img=False, original_size=(178, 218)):
         rects = self.detector(img, 1)

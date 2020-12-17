@@ -13,14 +13,17 @@ class CNN_model(tf.keras.Model, defs.Model):
                  cnn_filters=8,
                  cnn_kernel_size=(5, 5),
                  layer_activation='relu',
-                 dense_layer_size=100):
+                 dense_layer_size=100,
+                 colour=True):
 
         super(CNN_model, self).__init__()
         self.requires_validation_set = True
         self.history_loss = None
 
+        channels = 3 if colour else 1
+
         self.conv_layer1 = tf.keras.layers.Conv2D(cnn_filters, cnn_kernel_size, activation=layer_activation,
-                                                  input_shape=(*input_shape, 3))
+                                                  input_shape=(*input_shape, channels))
         self.pool_layer1 = tf.keras.layers.MaxPool2D(2, 2)
         self.conv_layer2 = tf.keras.layers.Conv2D(cnn_filters, cnn_kernel_size, activation=layer_activation)
         self.pool_layer2 = tf.keras.layers.MaxPool2D(2, 2)
@@ -28,6 +31,7 @@ class CNN_model(tf.keras.Model, defs.Model):
         self.dense_layer1 = tf.keras.layers.Dense(dense_layer_size, activation=layer_activation)
         self.dense_layer2 = tf.keras.layers.Dense(num_of_classes, activation='softmax')
 
+        self.compile(loss='categorical_crossentropy', metrics=['accuracy'], optimizer='adam')
     def call(self, inputs, training=None, mask=None):
         x = self.conv_layer1(inputs)
         x = self.pool_layer1(x)
@@ -39,13 +43,14 @@ class CNN_model(tf.keras.Model, defs.Model):
         return x
 
     def train(self, X_train, y_train, validation_data=None):
-        self.compile(loss='categorical_crossentropy', metrics=['accuracy'], optimizer='adam')
 
         self.history_loss = self.fit(X_train, y_train,
-                                     epochs=10,
+                                     epochs=7,
                                      validation_data=validation_data,
                                      shuffle=True,
                                      verbose=1)
+
+        # self.view_accuracy_history()
         pass
 
     def test(self, X_test, y_test):
@@ -53,6 +58,11 @@ class CNN_model(tf.keras.Model, defs.Model):
         y_pred_class = np.argmax(y_pred, axis=-1)
         y_test_class = np.argmax(y_test, axis=-1)
         return y_pred, accuracy_score(y_pred_class, y_test_class)
+
+    def view_accuracy_history(self):
+        plt.plot(self.history_loss.history['loss'])
+        plt.plot(self.history_loss.history['val_loss'])
+        plt.show()
 
     # TODO : Refine get_filter_output methods
 

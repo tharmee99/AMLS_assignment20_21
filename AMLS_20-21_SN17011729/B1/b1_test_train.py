@@ -20,7 +20,6 @@ class B1(defs.Task):
                          label_feature='face_shape')
 
         self.rescaled_image_dim = rescaled_image_dim
-        self.model = models.SVM_model()
 
         self.missed_faces = 0
         self.duplicate_faces = 0
@@ -28,6 +27,11 @@ class B1(defs.Task):
         self.predictor = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
 
         self.get_data()
+
+        self.initialize_model()
+
+    def initialize_model(self):
+        self.model = models.SVM_model()
 
     def __get_dlib_mouth_landmarks(self, img, show_img=False, original_size=(500, 500)):
 

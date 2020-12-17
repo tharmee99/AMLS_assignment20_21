@@ -19,16 +19,15 @@ class B2(defs.Task):
         self.apply_low_variance_filter()
         self.apply_low_variance_filter(test=True)
 
-        self.model = models.RandForest_model()
-
-        print(type(self.model.model).__module__.split('.')[0])
-
         # TODO : write method to view low variance filter mask
         # TODO : include feature reduction numerics
         # asd = self.lv_selector.get_support()
         # defs.view_image(asd.reshape(*rescaled_image_dim, 3)[:,:,0].astype('float32'))
         # defs.view_image(asd.reshape(*rescaled_image_dim, 3)[:,:,1].astype('float32'))
         # defs.view_image(asd.reshape(*rescaled_image_dim, 3)[:,:,2].astype('float32'))
+
+    def initialize_model(self):
+        self.model = models.RandForest_model()
 
     def preprocess_image(self, image_dir, show_img=False):
         # Read image

@@ -1,6 +1,7 @@
 import math
 import pickle
 import sys
+import time
 
 import cv2
 import numpy as np
@@ -59,6 +60,9 @@ class Model:
     def test(self, X_test, y_test):
         raise NotImplemented("Model Test function needs to be implemented")
 
+    def reset(self):
+        raise NotImplemented("Model Reset function needs to be implemented")
+
 
 class Task:
     def __init__(self, name, dataset_dir, temp_dir, label_feature):
@@ -67,9 +71,13 @@ class Task:
         self.temp_dir = temp_dir
         self.label_feature = label_feature
 
+        self.one_hot_encoded = False
+
         self.accepted_formats = (".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".tif")
         self.test_accuracy = -1.0
         self.train_accuracy = -1.0
+
+        self.pre_processing_time = -1.0
 
         self.enc = None
 
@@ -82,23 +90,36 @@ class Task:
     def preprocess_image(self, image_dir, show_img=False):
         raise NotImplemented("Preprocessing method must be implemented!")
 
-    def get_data(self, X_arr_name='X.npy', y_arr_name='y.npy', one_hot_encoded=False, verbose=0):
-        try:
-            X = self.read_intermediate(X_arr_name)
-            y = self.read_intermediate(y_arr_name)
-        except FileNotFoundError:
+    def get_data(self, X_arr_name='X.npy', y_arr_name='y.npy', verbose=0, force_calculation=False):
+
+        start_time = time.time()
+
+        if force_calculation:
             X, y = self.build_design_matrix(verbose=verbose)
             self.save_intermediate(X, 'X')
             self.save_intermediate(y, 'y')
+        else:
+            try:
+                X = self.read_intermediate(X_arr_name)
+                y = self.read_intermediate(y_arr_name)
+            except FileNotFoundError:
+                X, y = self.build_design_matrix(verbose=verbose)
+                self.save_intermediate(X, 'X')
+                self.save_intermediate(y, 'y')
 
-        if one_hot_encoded:
+        if self.one_hot_encoded:
             self.enc = OneHotEncoder(handle_unknown='ignore', sparse=False)
             y = self.enc.fit_transform(y.reshape(-1, 1))
+        else:
+            self.enc = None
 
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y, test_size=0.2)
 
-        # TODO : read model (self.model.model) depending on selected model (self.model)
+        self.pre_processing_time = time.time() - start_time
         pass
+
+    def initialize_model(self):
+        raise NotImplemented("Method to initialize model must be implemented")
 
     def build_design_matrix(self, dataset_dir=None, verbose=0):
         if dataset_dir is not None:
@@ -172,9 +193,17 @@ class Task:
     def compute_kfold_cv_score(self, folds=5):
         skf = StratifiedKFold(n_splits=folds)
 
-        accuracy = []
+        metrics = {}
 
-        if self.enc is not None:
+        self.get_data(force_calculation=True)
+
+        metrics["pre_processing_time"] = self.pre_processing_time
+
+        metrics["training_times"] = []
+        metrics["testing_times"] = []
+        metrics["accuracies"] = []
+
+        if self.one_hot_encoded:
             y_temp = self.enc.inverse_transform(self.y_train)
         else:
             y_temp = self.y_train
@@ -183,15 +212,21 @@ class Task:
             X_train, X_test = self.X_train[train_index], self.X_train[test_index]
             y_train, y_test = self.y_train[train_index], self.y_train[test_index]
 
+            start_time = time.time()
             self.train(X_train, y_train)
+            train_done_time = time.time()
             _, acc = self.test(X_test, y_test)
-            accuracy.append(acc)
+            metrics["training_times"].append(train_done_time-start_time)
+            metrics["testing_times"].append(time.time()-train_done_time)
+            metrics["accuracies"].append(acc)
 
-        return accuracy
+        return metrics
 
-    def train(self, X_train=None, y_train=None):
+    def train(self, X_train=None, y_train=None, force_calculation=False):
         if self.model is None:
             raise Exception("Model has not been initialized")
+
+        self.initialize_model()
 
         if X_train is None or y_train is None:
 
