@@ -4,6 +4,17 @@
 \documentclass{article}
 \usepackage{spconf,amsmath,graphicx}
 \usepackage{booktabs}
+\usepackage{hyperref}
+
+\usepackage[backend=bibtex,style=numeric,sorting=none]{biblatex}
+\addbibresource{refs.bib}
+\renewcommand*{\bibfont}{\footnotesize}
+
+\usepackage[toc,page]{appendix}
+
+
+\setlength\parindent{0pt}
+
 % Title.
 % ------
 \title{Applied machine learning system ELEC0134 20/21 report}
@@ -15,38 +26,40 @@
 \maketitle
 %
 \begin{abstract}
-    This section provides a brief overview of the methodology/results presented in the report.\footnote{The code is provided link-to-download-your-project.com and GitHub project: link-to-your-github-project}
+    WRITE ME LAST...
+    \\
+    
+    \href{https://github.com/tharmee99/AMLS_assignment20_21}{Link to GitHub Repository}
 \end{abstract}
 %
 \begin{keywords}
-    One, two, three, four, five
+    WRITE, ME, LAST
 \end{keywords}
 %
 
 \section{Introduction}
-\label{sec:intro}
-    This section introduces the problem, a brief bird's-eye view of the methodologies you adopted and the organization of this report.
+\label{sec:introduction}
+    Machine learning has been increasingly used to solve classification and regression tasks for which traditional algorithms either don't exists or perform poorly in comparison. Facial detection and classification is a common problem tackled by Machine Learning techniques. Techniques discussed by Viola and Jones \autocite{990517} have been widely used and were a large stepping stone to more complex facial detection/classification algorithms \autocite{8806572, 8549735}. Furthermore, the introduction of convolutional neural networks transformed feature extraction and classification in image datasets even more \autocite{6619290, 7553523}.
+    \\
     
-    A citation example is given here \cite{C2}.
-
+    This project aims to solve 4 classification tasks on 2 different datasets. The datasets being used are a subset of the "Cartoon Set" (cartoonset) dataset provided by Google \autocite{cartoonset} as well as a subset of the "CelebFaces Attributes" (celebA) provided by Shuo Yang et al \autocite{7410776}. While both datasets consist of image data samples, the former contains computer generated graphics of cartoon images whereas the latter contains cropped and pose corrected images of people. The celebA dataset will contain a larger variation in subject background, lighting and face position compared to the uniform nature of the cartoonset dataset. This will undoubtedly make the classification task more difficult.
+    \\
+    
+    On the celebA dataset two binary classification tasks will be tackled; one will try to distinguish between the gender of the person (task A1) and the other will be making classifications on the emotion of the person by making decisions on whether or not they're smiling (task A2). On the cartoon dataset, two multi-class classification tasks will be considered. The first task will try to classify the face-shape of the cartoon (task B1). The final task will classify the eye-colour of the cartoon face (task B2). Face-shapes eye-colour were both limited to 5 classes each in the subset. 
+    \\
+    
+    \S \ref{sec:literature_survey} will discuss existing architectures for facial feature extraction as well as classification and discuss their effectiveness relative to one another. \S \ref{sec:description_of_models} and \S \ref{sec:implementation_of_models} will discuss the description and implementation of the chosen models. Justification for the chosen approach will be given as well as a detailed insight into how those models were realised, trained and tested in python. The obtained results will be analysed in \S \ref{sec:experimental_results} and finally a conclusion will be drawn in \S \ref{sec:conclusion}.
 
 \section{Literature survey}
-\label{sec:lite}
-    This section should focus on an overview of potential approaches to solve the tasks. You can introduce some classical and state-of-the-art machine learning algorithms.
+\label{sec:literature_survey}
+    
 
 
 \section{Description of models}
-\label{sec:models}
+\label{sec:description_of_models}
     In this section, you should briefly describe the model you are using for each task, along with the rationale. You may opt to use a single learning algorithm to solve the problem or multiple ones, but bear in mind there are page limitations and that you should explain your rationale behind your choices. That is, the algorithmic description must detail your reasons for selecting a particular model.
     
-    You can clarify them with flow charts, figures or equations. An example of how to draw an image is demonstrated in Fig. \ref{fig:roberts_building}.
-    
-    \begin{figure}[htb]
-    \centering
-    \includegraphics[width=0.48\textwidth]{img/Roberts_building.jpg}
-    \caption{A nice view of Roberts Building}
-    \label{fig:roberts_building}
-    \end{figure}
+    You can clarify them with flow charts, figures or equations.
     
     \subsection{Task A1: the task name}
     \label{ssec:models_A1}
@@ -62,7 +75,7 @@
     Hello world!
 
 \section{Implementation}
-\label{sec:impl}
+\label{sec:implementation_of_models}
     This section must provide the detailed implementation of your models. In particular, you must provide the name and use of external libraries, explain hyper-parameter selection, training pipeline (if any) and key modules/classes/functions/algorithms.
     
     You also must provide a detailed description of the dataset (content, size, format, etc.), any data pre-processing that was applied and how you separate your dataset into training, validation and test sets.
@@ -84,7 +97,7 @@
     Hello world!
 
 \section{Experimental Results and Analysis}
-\label{sec:results}
+\label{sec:experimental_results}
     This section describes and discusses your results. Additionally, this section should include accuracy prediction scores on a separate test dataset, provided by the module organizers, but not used during your training and validation process.
     
     We recommend you use a table to list the tasks, models and results before analysis.
@@ -103,7 +116,7 @@
     \end{table}
 
 \section{Conclusion}
-\label{sec:conc}
+\label{sec:conclusion}
     This last section summarizes the findings and suggests directions for future improvements.
 
 \vfill\pagebreak
@@ -112,7 +125,13 @@
 % BiBTeX files (here: strings, refs, manuals). The IEEEbib.bst bibliography
 % style file from IEEE produces unsorted bibliography list.
 % -------------------------------------------------------------------------
-\bibliographystyle{IEEEbib}
-\bibliography{refs}
+\printbibliography
+% \bibliographystyle{IEEEbib}
+% \bibliography{refs}
+
+\newpage
+\appendix
+\appendixpage
+
 
 \end{document}
