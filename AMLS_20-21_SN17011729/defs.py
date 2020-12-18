@@ -42,13 +42,22 @@ def view_image(img, window_name="image"):
     cv2.destroyAllWindows()
 
 
-def factors(n):
-    return set(reduce(list.__add__, ([i, n//i] for i in range(1, int(n**0.5) + 1) if n % i == 0)))
-
 def euclidean_distance(a, b):
+    """
+    Function to compute the euclidean distance between two points
+
+    :param a: a tuple or list or length 2 representing the first coordinate
+    :param b: a tuple or list of length 2 representing the second coordinate
+    :return: a float representing the distance between the two coordinates
+    """
     return math.sqrt((a[0]-b[0])**2 + (a[1]-b[1])**2)
 
+
 class Model:
+    """
+    A class that is subclassed by each of the models implemented. This ensures that a common train test reset function
+    can be called and thereby allows interchangability of models during testing.
+    """
     def __init__(self):
         self.requires_validation_set = False
         self.requires_flat_input = False
@@ -65,6 +74,10 @@ class Model:
 
 
 class Task:
+    """
+    A class that is subclassed for each of the 4 tasks in this project. It contains all of the functions to read data,
+    split data, save/load intermediate results as well as test/train methods.
+    """
     def __init__(self, name, dataset_dir, temp_dir, label_feature):
         self.name = name
         self.dataset_dir = dataset_dir
@@ -88,10 +101,24 @@ class Task:
         self.y_test = None
 
     def preprocess_image(self, image_dir, show_img=False):
+        """
+        This method is implemented in each of the tasks as the pre-processing differs from task to task.
+
+        :param image_dir: the path to the file to be pre-processed
+        :param show_img: if the images should be shown as they are pre-processed (for debugging)
+        :return: an array or matrix representing the features of the image to be trained on
+        """
         raise NotImplemented("Preprocessing method must be implemented!")
 
     def get_data(self, X_arr_name='X.npy', y_arr_name='y.npy', verbose=0, force_calculation=False):
+        """
+        This method is called to load all the data and perform splits ready for the model to train and then test
 
+        :param X_arr_name: The filename of the X matrix (design matrix)
+        :param y_arr_name: The filename of the y array (labels array)
+        :param verbose: If greater than 0, then feedback will be printed and shown via images
+        :param force_calculation: If Ture, the pre-processing is carried out regardless of whether the save files exist
+        """
         start_time = time.time()
 
         if force_calculation:
@@ -122,6 +149,12 @@ class Task:
         raise NotImplemented("Method to initialize model must be implemented")
 
     def build_design_matrix(self, dataset_dir=None, verbose=0):
+        """
+        This method build the design matrix and the labels array but does not split it. It is called by get_data()
+        :param dataset_dir: the directory in which the dataset is provided
+        :param verbose: if greater than 0, feedback will be printed and shown via pictures
+        :return: design matrix X and labels array y
+        """
         if dataset_dir is not None:
             image_paths = [os.path.join(dataset_dir, "img", img) for img in
                            os.listdir(os.path.join(dataset_dir, "img"))]
@@ -191,6 +224,13 @@ class Task:
             raise TypeError(file[1] + " files are not supported")
 
     def compute_kfold_cv_score(self, folds=5):
+        """
+        computes a k-fold cross validation score. The accuracies are tracked as well as the time taken to train, test
+        and pre-process the images.
+
+        :param folds: The number of folds to performs
+        :return: a dictionary of different metrics
+        """
         skf = StratifiedKFold(n_splits=folds)
 
         metrics = {}
@@ -222,7 +262,13 @@ class Task:
 
         return metrics
 
-    def train(self, X_train=None, y_train=None, force_calculation=False):
+    def train(self, X_train=None, y_train=None):
+        '''
+        The train function that in turn calls the model.train function
+
+        :param X_train: If supplied, the supplied X_train and y_train will be used to train the model
+        :param y_train: If supplied, the supplied X_train and y_train will be used to train the model
+        '''
         if self.model is None:
             raise Exception("Model has not been initialized")
 
@@ -249,6 +295,13 @@ class Task:
         pass
 
     def test(self, X_test=None, y_test=None):
+        """
+        Tests the trained model on test data
+
+        :param X_test: If provided, the model will be trained on the provided data, otherwise on self.X_test
+        :param y_test: If provided, the model will be trained on the provided data, otherwise on self.y_test
+        :return:
+        """
         if self.model is None:
             raise Exception("Model has not been initialized")
 
@@ -262,6 +315,9 @@ class Task:
             return y_pred, self.test_accuracy
 
     def print_results(self):
+        """
+        Prints a summary of the metrics
+        """
         if self.train_accuracy < 0:
             print("No model has been trained")
         elif self.test_accuracy < 0:
