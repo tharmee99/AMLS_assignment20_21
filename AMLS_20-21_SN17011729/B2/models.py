@@ -2,11 +2,8 @@ import sys
 import time
 
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, confusion_matrix
-from sklearn.svm import SVC
 import defs
-import numpy as np
 
 class RandForest_model(defs.Model):
     def __init__(self, n_estimators=100, criterion='gini', max_depth=5):

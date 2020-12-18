@@ -8,14 +8,12 @@ import defs
 class SVM_model(defs.Model):
     def __init__(self, kernel='linear', C=1.0, degree=3, gamma='scale'):
         super(SVM_model, self).__init__()
-        print("Instantiating SVC model...")
         self.model = SVC(kernel=kernel, C=C, degree=degree, gamma=gamma)
         self.requires_flat_input = True
         self.confusion_matrix = None
         pass
 
     def train(self, X_train, y_train):
-        print("Training SVC model...")
         start_time = time.time()
         self.model.fit(X_train, y_train)
         time_taken = time.time() - start_time
