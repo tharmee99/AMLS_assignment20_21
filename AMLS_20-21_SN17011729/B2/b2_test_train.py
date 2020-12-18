@@ -6,7 +6,7 @@ from B2 import models
 
 
 class B2(defs.Task):
-    def __init__(self, dataset_dir, temp_dir, rescaled_image_dim=(40, 40)):
+    def __init__(self, dataset_dir, temp_dir, rescaled_image_dim=(20, 40)):
         super().__init__(name='Task B2 - Eye Colour Classification',
                          dataset_dir=dataset_dir,
                          temp_dir=temp_dir,
@@ -14,19 +14,26 @@ class B2(defs.Task):
         self.rescaled_image_dim = rescaled_image_dim
         self.lv_selector = None
 
+        self.initialize_model()
+
+        # TODO : write method to view low variance filter mask
+        # TODO : include feature reduction numerics
+        # asd = self.lv_selector.get_support()
+        #
+        # b_mask = asd.reshape(rescaled_image_dim[1], rescaled_image_dim[0], 3)[:,:,0].astype('float32')
+        #
+        # temp = cv2.resize(b_mask, (250, 500), fx=0, fy=0, interpolation=cv2.INTER_NEAREST)
+        #
+        # defs.view_image(temp)
+        # defs.view_image(asd.reshape(*rescaled_image_dim, 3)[:,:,1].astype('float32'))
+        # defs.view_image(asd.reshape(*rescaled_image_dim, 3)[:,:,2].astype('float32'))
+
+    def initialize_model(self):
         self.get_data()
 
         self.apply_low_variance_filter()
         self.apply_low_variance_filter(test=True)
 
-        # TODO : write method to view low variance filter mask
-        # TODO : include feature reduction numerics
-        # asd = self.lv_selector.get_support()
-        # defs.view_image(asd.reshape(*rescaled_image_dim, 3)[:,:,0].astype('float32'))
-        # defs.view_image(asd.reshape(*rescaled_image_dim, 3)[:,:,1].astype('float32'))
-        # defs.view_image(asd.reshape(*rescaled_image_dim, 3)[:,:,2].astype('float32'))
-
-    def initialize_model(self):
         self.model = models.RandForest_model()
 
     def preprocess_image(self, image_dir, show_img=False):
@@ -53,7 +60,7 @@ class B2(defs.Task):
         if test:
             self.X_test = self.lv_selector.transform(self.X_test)
         else:
-            self.lv_selector = VarianceThreshold(threshold=(.8 * (1 - .8)))
+            self.lv_selector = VarianceThreshold()
             self.X_train = self.lv_selector.fit_transform(self.X_train)
 
 

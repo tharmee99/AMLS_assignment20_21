@@ -31,10 +31,12 @@ class A2(defs.Task):
             self.detector = dlib.get_frontal_face_detector()
             self.predictor = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
 
-        self.get_data()
+        self.initialize_model()
 
-        print(self.X_train.shape)
-        print(self.X_test.shape)
+    def initialize_model(self):
+        self.model = models.SVM_model()
+
+        self.get_data()
 
         if self.approach == 1 or self.approach == 2:
             self.remove_ambiguous_samples()
@@ -45,12 +47,9 @@ class A2(defs.Task):
         if len(self.X_train.shape) == 1:
             self.X_train.reshape(-1, 1)
 
-        self.initialize_model()
-
-    def initialize_model(self):
-        self.model = models.SVM_model()
-
     def __get_dlib_mouth_landmarks(self, img, show_img=False, original_size=(178, 218)):
+        # defs.view_image(img)
+
         rects = self.detector(img, 1)
 
         num_faces = len(rects)
@@ -75,8 +74,11 @@ class A2(defs.Task):
             # [i.e., (x, y, w, h)],
             #   (x, y, w, h) = face_utils.rect_to_bb(rect)
             (x, y, w, h) = defs.rect_to_bb(rect)
+            cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
             face_shapes[:, i] = np.reshape(temp_shape, [136])
             face_areas[0, i] = w * h
+
+        # defs.view_image(img)
 
         # find largest face and keep
         dlibout = np.reshape(np.transpose(face_shapes[:, np.argmax(face_areas)]), [68, 2])
@@ -84,7 +86,7 @@ class A2(defs.Task):
         mouth_landmarks = dlibout[48:]
 
         if show_img:
-            for coord in dlibout:
+            for coord in mouth_landmarks:
                 cv2.circle(img, (coord[0], coord[1]), 1, (0, 0, 255), -1)
 
             temp = cv2.resize(img, original_size, fx=0, fy=0, interpolation=cv2.INTER_NEAREST)

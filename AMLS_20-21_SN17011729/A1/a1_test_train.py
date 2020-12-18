@@ -25,12 +25,13 @@ class A1(defs.Task):
         self.initialize_model()
 
     def initialize_model(self):
-        self.get_data()
         self.model = CNN_model(self.rescaled_image_dim, 2,
                                cnn_filters=self.cnn_filters,
                                cnn_kernel_size=self.cnn_kernel_size,
                                layer_activation=self.layer_activation,
                                dense_layer_size=self.dense_layer_size)
+
+        self.get_data()
 
     def preprocess_image(self, image_dir, show_img=False):
         cv_read_flag = 1 if self.colour else 0

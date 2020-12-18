@@ -1,4 +1,5 @@
 import dlib
+from sklearn.feature_selection import VarianceThreshold
 
 import defs
 import cv2
@@ -12,7 +13,7 @@ class B1(defs.Task):
     def __init__(self,
                  dataset_dir,
                  temp_dir,
-                 rescaled_image_dim=(50, 50)):
+                 rescaled_image_dim=(25, 50)):
 
         super().__init__(name='Task B1 - Face Shape Classification',
                          dataset_dir=dataset_dir,
@@ -26,12 +27,11 @@ class B1(defs.Task):
         self.detector = dlib.get_frontal_face_detector()
         self.predictor = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
 
-        self.get_data()
-
         self.initialize_model()
 
     def initialize_model(self):
         self.model = models.SVM_model()
+        self.get_data()
 
     def __get_dlib_mouth_landmarks(self, img, show_img=False, original_size=(500, 500)):
 
@@ -76,21 +76,24 @@ class B1(defs.Task):
     def preprocess_image(self, image_dir, show_img=False):
         img = cv2.imread(image_dir, 0)
 
-        self.__get_dlib_mouth_landmarks(img)
+        # defs.view_image(img)
+
+        # self.__get_dlib_mouth_landmarks(img)
 
         x_mid = img.shape[0]//2
 
         img = img[:, :x_mid]
 
+        # defs.view_image(img)
+
         # Resize image
         resized = cv2.resize(img, self.rescaled_image_dim, interpolation=cv2.INTER_AREA)
 
         if show_img:
-            temp = cv2.resize(img, (250, 500), fx=0, fy=0, interpolation=cv2.INTER_NEAREST)
+            temp = cv2.resize(resized, (250, 500), fx=0, fy=0, interpolation=cv2.INTER_NEAREST)
             defs.view_image(temp)
 
         # Reshape to append to design matrix
-        # TODO : Reshape size conditional on self.model
         if self.model.requires_flat_input:
             resized = np.reshape(resized, (-1))
 
