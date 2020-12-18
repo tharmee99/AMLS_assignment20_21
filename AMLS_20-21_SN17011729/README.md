@@ -9,3 +9,15 @@ Each folder A1, A2, B1, B2 contains the python scripts specific to that task. Th
 The **shape_predictor_68_face_landmarks.dat** file is the pre-trained face landmark extractor required for task A2.
 
 Upon execution, temp folders will be generated in each of the task's folders. In these folders, the pre-processed images will be stored as npy files. These can easily be read into numpy arrays upon further executions. This greatly reduces the time taken to execute the code.
+
+## Required Packages
+
+* numpy
+* opencv-python
+* tensorflow
+* dlib
+* sklearn
+* pandas
+* pandas
+* tqdm
+* matplotlib

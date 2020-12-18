@@ -194,7 +194,7 @@ class Task:
         if not os.path.exists(self.temp_dir):
             os.makedirs(self.temp_dir)
 
-        elif type(obj).__module__ == np.__name__:
+        if type(obj).__module__ == np.__name__:
             if overwrite or (not os.path.isfile(os.path.join(self.temp_dir, file_name + ".npy"))):
                 np.save(os.path.join(self.temp_dir, file_name), obj)
             else:

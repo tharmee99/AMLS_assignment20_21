@@ -73,14 +73,14 @@ _, alt_test_b2 = taskB2.test(X_test=X_test_B2, y_test=y_test_B2)
 # ########################################################################################################################
 
 time_taken = time.time() - start_time
-print()
-print(time_taken)
-print("\n\n\n-------------CONFUSION MATRICES-------------\n")
-
-print(taskA1.model.confusion_matrix)
-print(taskA2.model.confusion_matrix)
-print(taskB1.model.confusion_matrix)
-print(taskB2.model.confusion_matrix)
+# print()
+# print(time_taken)
+# print("\n\n\n-------------CONFUSION MATRICES-------------\n")
+#
+# print(taskA1.model.confusion_matrix)
+# print(taskA2.model.confusion_matrix)
+# print(taskB1.model.confusion_matrix)
+# print(taskB2.model.confusion_matrix)
 
 print("\n\n\n-------------RESULTS SUMMARY-------------\n")
 
